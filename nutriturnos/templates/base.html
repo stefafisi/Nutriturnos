@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<meta name="theme-color" content="{{ branding.primary if branding else '#1E3B2C' }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+<title>{% block title %}Turnos de nutrición{% endblock %}</title>
+{% if branding %}
+<link rel="icon" type="image/png" sizes="64x64" href="{{ url_for('static', filename=branding.icon) }}">
+{% else %}
+<link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icon.svg') }}">
+{% endif %}
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { forest: "#1E3B2C", leaf: "#4F8A5B", mist: "#F3F6F2", citrus: "#E9B53A", line: "#D9E2D8" },
+  fontFamily: { sans: ["Figtree", "sans-serif"], display: ["Fraunces", "serif"] } } } };
+</script>
+<style>:focus-visible{outline:2px solid #4F8A5B;outline-offset:2px}</style>
+{% if branding %}
+<style>
+body.professional-branded {
+  background-color: var(--brand-background) !important;
+  color: var(--brand-text);
+}
+body.professional-branded .bg-forest { background-color: var(--brand-primary) !important; }
+body.professional-branded .text-forest { color: var(--brand-text) !important; }
+body.professional-branded .bg-mist { background-color: var(--brand-background) !important; }
+body.professional-branded .bg-leaf { background-color: var(--brand-accent) !important; }
+body.professional-branded .text-leaf { color: var(--brand-primary) !important; }
+body.professional-branded .border-line { border-color: var(--brand-border) !important; }
+body.professional-branded .border-leaf { border-color: var(--brand-accent) !important; }
+body.professional-branded .border-citrus { border-color: var(--brand-accent) !important; }
+body.professional-branded .bg-citrus { background-color: var(--brand-accent) !important; }
+body.professional-branded .hover\:bg-leaf:hover { background-color: var(--brand-text) !important; }
+body.professional-branded .brand-accent-control { accent-color: var(--brand-accent) !important; }
+body.professional-branded .service-option:has(input:checked) {
+  border-color: var(--brand-accent) !important;
+  background-color: color-mix(in srgb, var(--brand-accent) 12%, white) !important;
+}
+</style>
+{% endif %}
+<style>
+.professional-card-branded {
+  border-color: var(--profile-primary) !important;
+  background-color: var(--profile-background) !important;
+}
+.professional-card-branded .professional-card-title { color: var(--profile-text); }
+.professional-card-branded .professional-card-link { background-color: var(--profile-primary); }
+.professional-card-branded .professional-card-link:hover { background-color: var(--profile-text); }
+</style>
+</head>
+<body class="bg-mist text-forest font-sans min-h-screen {{ 'professional-branded' if branding }}"
+      {% if branding %}style="--brand-primary: {{ branding.primary }}; --brand-accent: {{ branding.accent }}; --brand-background: {{ branding.background }}; --brand-text: {{ branding.text }}; --brand-border: {{ branding.border }}"{% endif %}>
+<header class="bg-forest text-white">
+  <nav class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2">
+    {% if request.endpoint == 'login' or session.admin %}
+    <span class="font-display text-xl mr-auto">Nutriturnos</span>
+    {% else %}
+    <a href="{{ url_for('index') }}" class="font-display text-xl mr-auto">Nutriturnos</a>
+    <a href="{{ url_for('index') }}" class="hover:underline {{ 'underline' if request.path == '/' }}">Profesionales</a>
+    {% if not session.admin and request.endpoint != 'login' %}
+    <a href="{{ url_for('login') }}" class="rounded-lg border border-white/30 px-3 py-1.5 text-sm hover:border-white hover:bg-white/10">Acceso profesional</a>
+    {% endif %}
+    {% endif %}
+    {% if session.admin %}
+    <a href="{{ url_for('agenda') }}" class="hover:underline {{ 'underline' if request.path == '/admin' }}">Agenda</a>
+    <a href="{{ url_for('patients') }}" class="hover:underline {{ 'underline' if '/admin/pacientes' in request.path }}">Pacientes</a>
+    <a href="{{ url_for('config') }}" class="hover:underline {{ 'underline' if request.path == '/admin/config' }}">Configuración</a>
+    <form method="post" action="{{ url_for('logout') }}"><button class="text-citrus hover:underline">Salir</button></form>
+    {% endif %}
+  </nav>
+</header>
+<main class="max-w-5xl mx-auto px-4 py-8">
+{% with msgs = get_flashed_messages() %}{% for m in msgs %}
+<p class="mb-4 rounded bg-white border border-line px-4 py-2" role="status">{{ m }}</p>{% endfor %}{% endwith %}
+{% block content %}{% endblock %}
+</main>
+<script>
+const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+document.querySelectorAll('form[method="post" i]').forEach(form => {
+  if (!form.querySelector('input[name="csrf_token"]')) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'csrf_token';
+    input.value = csrfToken;
+    form.append(input);
+  }
+});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js');
+let installPrompt;
+window.addEventListener('beforeinstallprompt', event => {
+  event.preventDefault();
+  installPrompt = event;
+  const button = document.getElementById('install-app');
+  if (button) button.classList.remove('hidden');
+});
+document.getElementById('install-app')?.addEventListener('click', async () => {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null;
+});
+</script>
+</body>
+</html>

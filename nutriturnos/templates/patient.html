@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="font-display text-3xl">{{ p.full_name }}</h1>
+<p class="text-forest/60 mb-6">{{ p.phone }}{{ ' · ' ~ p.email if p.email }}{{ ' · DNI ' ~ p.dni if p.dni }}</p>
+<div role="tablist" class="flex gap-2 mb-6">
+  {% for id, label in [('datos','Datos e historial'),('consultas','Consultas'),('evolucion','Mediciones y evolución')] %}
+  <button role="tab" data-tab="{{ id }}" class="tab px-4 py-2 rounded-lg border border-line bg-white">{{ label }}</button>{% endfor %}
+</div>
+
+<section id="datos" class="panel">
+  <form method="post" class="space-y-3">
+    <label class="block font-semibold">Antecedentes, patologías y alergias
+      <textarea name="medical_history" rows="6" class="mt-1 w-full border border-line rounded-lg p-3 bg-white font-normal">{{ p.medical_history or '' }}</textarea></label>
+    <button class="px-5 py-3 rounded-lg bg-forest text-white font-semibold hover:bg-leaf">Guardar cambios</button>
+  </form>
+</section>
+
+<section id="consultas" class="panel hidden">
+  <ul class="bg-white border border-line rounded-lg divide-y divide-line">
+  {% for a in p.appointments|sort(attribute='appointment_date', reverse=True) %}
+    <li class="p-4 flex justify-between"><span>{{ a.appointment_date.strftime('%d/%m/%Y %H:%M') }} · {{ a.service.name if a.service }}</span><span>{{ a.status.replace('_',' ') }}</span></li>
+  {% else %}<li class="p-6 text-center text-forest/60">Sin consultas registradas.</li>{% endfor %}
+  </ul>
+</section>
+
+<section id="evolucion" class="panel hidden space-y-8">
+  {% if p.records|length > 1 %}<div class="bg-white border border-line rounded-lg p-4"><canvas id="chart" height="110"></canvas></div>{% endif %}
+  <form method="post" action="{{ url_for('add_record', id=p.id) }}" class="bg-white border border-line rounded-lg p-4 space-y-4">
+    <h2 class="font-display text-xl">Nueva medición</h2>
+    {% macro f(name, label, step='0.1') %}<label class="block text-sm">{{ label }}<input name="{{ name }}" type="number" step="{{ step }}" class="mt-1 w-full border border-line rounded-lg p-2"></label>{% endmacro %}
+    <label class="block text-sm">Fecha<input name="record_date" type="date" required value="{{ now_date }}" class="mt-1 w-full border border-line rounded-lg p-2"></label>
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      {{ f('weight_kg','Peso (kg)') }}{{ f('height_cm','Altura (cm)') }}{{ f('fat_percentage','Grasa (%)') }}
+      {{ f('muscle_percentage','Músculo (%)') }}{{ f('visceral_fat','Grasa visceral','1') }}
+      {{ f('waist_cm','Cintura (cm)') }}{{ f('hip_cm','Cadera (cm)') }}{{ f('arm_cm','Brazo (cm)') }}{{ f('thigh_cm','Muslo (cm)') }}
+      {{ f('tricipital_mm','Pliegue tricipital (mm)') }}{{ f('subscapular_mm','Subescapular (mm)') }}
+      {{ f('suprailiac_mm','Suprailíaco (mm)') }}{{ f('abdominal_mm','Abdominal (mm)') }}
+    </div>
+    <label class="block text-sm">Plan alimentario<textarea name="diet_plan_notes" rows="3" class="mt-1 w-full border border-line rounded-lg p-2"></textarea></label>
+    <label class="block text-sm">Próximos objetivos<textarea name="next_goals" rows="2" class="mt-1 w-full border border-line rounded-lg p-2"></textarea></label>
+    <button class="px-5 py-3 rounded-lg bg-forest text-white font-semibold hover:bg-leaf">Guardar medición</button>
+  </form>
+  <div class="overflow-x-auto bg-white border border-line rounded-lg">
+    <table class="w-full text-sm"><thead class="bg-mist text-left"><tr><th class="p-2">Fecha</th><th>Peso</th><th>IMC</th><th>Grasa %</th><th>Músculo %</th><th>Cintura</th></tr></thead>
+    {% for r in p.records|reverse %}<tr class="border-t border-line"><td class="p-2">{{ r.record_date.strftime('%d/%m/%Y') }}</td><td>{{ r.weight_kg or '–' }}</td><td>{{ r.bmi or '–' }}</td><td>{{ r.fat_percentage or '–' }}</td><td>{{ r.muscle_percentage or '–' }}</td><td>{{ r.waist_cm or '–' }}</td></tr>{% endfor %}
+    </table>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+const show = id => {
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('hidden', p.id !== id));
+  document.querySelectorAll('.tab').forEach(t => {
+    const on = t.dataset.tab === id;
+    t.classList.toggle('bg-white', !on);
+    t.classList.toggle('bg-forest', on);
+    t.classList.toggle('text-forest', !on);
+    t.classList.toggle('text-white', on);
+    t.classList.toggle('border-forest', on);
+    t.classList.toggle('border-line', !on);
+  });
+};
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => { show(t.dataset.tab); history.replaceState(null, '', '#' + t.dataset.tab); });
+show(['datos','consultas','evolucion'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'datos');
+{% if p.records|length > 1 %}
+const recs = {{ p.records|map(attribute='record_date')|map('string')|list|tojson }};
+const ds = (label, data, color) => ({ label, data, borderColor: color, backgroundColor: color, tension: .25 });
+new Chart(document.getElementById('chart'), { type: 'line', data: { labels: recs, datasets: [
+  ds('Peso (kg)', {{ p.records|map(attribute='weight_kg')|list|tojson }}, '#1E3B2C'),
+  ds('Grasa (%)', {{ p.records|map(attribute='fat_percentage')|list|tojson }}, '#E9B53A'),
+  ds('Músculo (%)', {{ p.records|map(attribute='muscle_percentage')|list|tojson }}, '#4F8A5B') ] },
+  options: { spanGaps: true } });
+{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="font-display text-3xl mb-6">Configuración del consultorio</h1>
+
+<section class="mb-10 rounded-xl border border-line bg-white p-5">
+  <h2 class="font-display text-2xl mb-2">Tu enlace de reservas</h2>
+  <p class="text-sm text-forest/70">Compartí este enlace para que los pacientes reserven en tu agenda:</p>
+  <a class="mt-2 inline-block break-all font-semibold text-leaf underline" href="{{ url_for('public_booking', slug=professional.slug, _external=True) }}">{{ url_for('public_booking', slug=professional.slug, _external=True) }}</a>
+</section>
+
+<section class="mb-10 rounded-xl border border-line bg-white p-5">
+  <h2 class="font-display text-2xl mb-4">Página principal y seña</h2>
+  <form method="post" class="grid gap-4 sm:grid-cols-2">
+    <input type="hidden" name="action" value="save_site">
+    <label class="text-sm font-semibold">Nombre del consultorio
+      <input name="site_title" value="{{ settings.site_title }}" maxlength="120" required class="mt-1 block w-full rounded-lg border border-line p-2">
+    </label>
+    <label class="text-sm font-semibold">Email para avisos de nuevos turnos
+      <input name="practitioner_email" type="email" value="{{ settings.practitioner_email }}" class="mt-1 block w-full rounded-lg border border-line p-2">
+    </label>
+    <label class="text-sm font-semibold sm:col-span-2">Descripción pública
+      <textarea name="site_description" rows="3" required class="mt-1 block w-full rounded-lg border border-line p-2">{{ settings.site_description }}</textarea>
+    </label>
+    <label class="text-sm font-semibold">Seña fija en pesos (0 desactiva la seña)
+      <input name="deposit_amount" type="number" step="0.01" min="0" value="{{ settings.deposit_amount }}" class="mt-1 block w-full rounded-lg border border-line p-2">
+    </label>
+    <label class="text-sm font-semibold">Alias de transferencia
+      <input name="payment_alias" value="{{ settings.payment_alias }}" maxlength="100" class="mt-1 block w-full rounded-lg border border-line p-2">
+    </label>
+    <label class="text-sm font-semibold sm:col-span-2">Medios de pago y condiciones
+      <textarea name="payment_instructions" rows="3" class="mt-1 block w-full rounded-lg border border-line p-2" placeholder="CVU, titular, cómo enviar el comprobante…">{{ settings.payment_instructions }}</textarea>
+    </label>
+    <p class="sm:col-span-2 text-sm text-forest/60">Si la seña sigue pendiente 24 horas después de la reserva, el sistema cancela el turno automáticamente. Se verifica cada pocos minutos cuando el proceso de automatizaciones está activo.</p>
+    <button class="w-fit rounded-lg bg-forest px-5 py-2 font-semibold text-white hover:bg-leaf">Guardar página y condiciones</button>
+  </form>
+</section>
+
+<section class="mb-10 rounded-xl border border-line bg-white p-5">
+  <h2 class="font-display text-2xl mb-4">Tipos de consulta</h2>
+  <div class="space-y-3">
+  {% for s in services %}
+    <details class="rounded-lg border border-line p-3">
+      <summary class="cursor-pointer font-semibold">{{ s.name }} · {{ 'Activa' if s.is_active else 'Pausada' }}</summary>
+      <form method="post" class="mt-3 grid gap-3 sm:grid-cols-2">
+        <input type="hidden" name="action" value="edit_service"><input type="hidden" name="id" value="{{ s.id }}">
+        <label class="text-sm">Nombre<input name="name" value="{{ s.name }}" required maxlength="100" class="mt-1 block w-full rounded-lg border border-line p-2"></label>
+        <label class="text-sm">Duración en minutos<input name="duration_minutes" type="number" min="10" max="480" value="{{ s.duration_minutes }}" required class="mt-1 block w-full rounded-lg border border-line p-2"></label>
+        <label class="text-sm">Precio en pesos<input name="price" type="number" min="0" step="0.01" value="{{ s.price }}" required class="mt-1 block w-full rounded-lg border border-line p-2"></label>
+        <label class="text-sm">Descripción<textarea name="description" rows="2" class="mt-1 block w-full rounded-lg border border-line p-2">{{ s.description or '' }}</textarea></label>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_online" {{ 'checked' if s.is_online }}> Es online</label>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" {{ 'checked' if s.is_active }}> Disponible para reservar</label>
+        <button class="w-fit rounded-lg bg-forest px-4 py-2 font-semibold text-white hover:bg-leaf">Guardar consulta</button>
+      </form>
+    </details>
+  {% endfor %}
+  </div>
+  <form method="post" class="mt-5 grid gap-3 border-t border-line pt-5 sm:grid-cols-2">
+    <input type="hidden" name="action" value="add_service">
+    <label class="text-sm">Nueva consulta<input name="name" required maxlength="100" class="mt-1 block w-full rounded-lg border border-line p-2"></label>
+    <label class="text-sm">Duración en minutos<input name="duration_minutes" type="number" min="10" max="480" value="45" required class="mt-1 block w-full rounded-lg border border-line p-2"></label>
+    <label class="text-sm">Precio en pesos<input name="price" type="number" min="0" step="0.01" value="0" required class="mt-1 block w-full rounded-lg border border-line p-2"></label>
+    <label class="text-sm">Descripción<textarea name="description" rows="2" class="mt-1 block w-full rounded-lg border border-line p-2"></textarea></label>
+    <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_online"> Es online</label>
+    <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" checked> Disponible para reservar</label>
+    <button class="w-fit rounded-lg bg-forest px-4 py-2 font-semibold text-white hover:bg-leaf">Agregar consulta</button>
+  </form>
+</section>
+
+<section class="mb-10 rounded-xl border border-line bg-white p-5">
+  <h2 class="font-display text-2xl">Google Calendar (opcional)</h2>
+  {% if google_connected %}
+  <p class="mt-2 text-sm">Google Calendar conectado como {{ google_calendar_email }}. Los turnos nuevos se agregan a ese calendario.</p>
+  {% elif google_calendar_enabled %}
+  <p class="mt-2 text-sm text-forest/70">Conectá el calendario del consultorio para agregar automáticamente los turnos nuevos.</p>
+  <a href="{{ url_for('google_calendar_connect') }}" class="mt-3 inline-block rounded-lg border border-line px-4 py-2 font-semibold">Conectar Google Calendar</a>
+  {% else %}
+  <p class="mt-2 text-sm text-forest/70">Google Calendar no está habilitado. El acceso a tu cuenta sigue funcionando con email y contraseña. Para conectar un calendario, configurá GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET.</p>
+  {% endif %}
+</section>
+
+<h2 class="font-display text-2xl mb-4">Horarios de atención</h2>
+<ul class="bg-white border border-line rounded-lg divide-y divide-line mb-4">
+{% for s in schedules %}
+  <li class="p-4">
+    <div class="flex flex-wrap items-center gap-3">
+      <span class="flex-1"><b>{{ dias[s.day_of_week] }}</b> {{ s.start_time.strftime('%H:%M') }} a {{ s.end_time.strftime('%H:%M') }} · turnos de {{ s.slot_duration }} min</span>
+      <button type="button" class="schedule-edit-toggle rounded-lg border border-line px-3 py-2 font-semibold hover:bg-mist"
+              aria-expanded="false" aria-controls="schedule-edit-{{ s.id }}">Editar</button>
+      <form method="post" onsubmit="return confirm('¿Quitar este horario de atención?')">
+        <input type="hidden" name="action" value="del_schedule"><input type="hidden" name="id" value="{{ s.id }}">
+        <button class="rounded-lg px-3 py-2 text-rose-700 hover:bg-rose-50">Quitar</button>
+      </form>
+    </div>
+    <form id="schedule-edit-{{ s.id }}" method="post" class="schedule-edit-form hidden mt-4 flex flex-wrap items-end gap-3 border-t border-line pt-4">
+      <input type="hidden" name="action" value="edit_schedule">
+      <input type="hidden" name="id" value="{{ s.id }}">
+      <label class="text-sm">Día<select name="day" class="mt-1 block rounded-lg border border-line p-2">{% for d in dias %}<option value="{{ loop.index0 }}" {{ 'selected' if loop.index0 == s.day_of_week }}>{{ d }}</option>{% endfor %}</select></label>
+      <label class="text-sm">Desde<input type="time" name="start" value="{{ s.start_time.strftime('%H:%M') }}" required class="mt-1 block rounded-lg border border-line p-2"></label>
+      <label class="text-sm">Hasta<input type="time" name="end" value="{{ s.end_time.strftime('%H:%M') }}" required class="mt-1 block rounded-lg border border-line p-2"></label>
+      <label class="text-sm">Minutos por turno<input type="number" name="slot" value="{{ s.slot_duration }}" min="10" max="480" required class="mt-1 block w-32 rounded-lg border border-line p-2"></label>
+      <button class="rounded-lg bg-forest px-5 py-2 font-semibold text-white hover:bg-leaf">Guardar cambios</button>
+      <button type="button" class="schedule-edit-cancel rounded-lg border border-line px-4 py-2">Cancelar</button>
+      <p class="basis-full text-sm text-forest/60">Los turnos ya reservados no se modifican; verificá que sigan dentro del nuevo horario.</p>
+    </form>
+  </li>
+{% else %}<li class="p-4 text-forest/60">No hay horarios cargados: nadie puede reservar.</li>{% endfor %}
+</ul>
+<form method="post" class="bg-white border border-line rounded-lg p-4 flex flex-wrap gap-3 items-end mb-10">
+  <input type="hidden" name="action" value="add_schedule">
+  <label class="text-sm">Día<select name="day" class="block mt-1 border border-line rounded-lg p-2">{% for d in dias %}<option value="{{ loop.index0 }}">{{ d }}</option>{% endfor %}</select></label>
+  <label class="text-sm">Desde<input type="time" name="start" value="14:00" required class="block mt-1 border border-line rounded-lg p-2"></label>
+  <label class="text-sm">Hasta<input type="time" name="end" value="20:00" required class="block mt-1 border border-line rounded-lg p-2"></label>
+  <label class="text-sm">Minutos por turno<input type="number" name="slot" value="45" min="10" max="480" required class="block mt-1 w-28 border border-line rounded-lg p-2"></label>
+  <button class="px-5 py-2 rounded-lg bg-forest text-white font-semibold hover:bg-leaf">Agregar horario</button>
+</form>
+
+<h2 class="font-display text-2xl mb-4">Vacaciones y feriados</h2>
+<ul class="bg-white border border-line rounded-lg divide-y divide-line mb-4">
+{% for b in blocks %}
+  <li class="p-3 flex items-center justify-between"><span>{{ b.day.strftime('%d/%m/%Y') }} {{ '· ' ~ b.reason if b.reason }}</span>
+  <form method="post"><input type="hidden" name="action" value="del_block"><input type="hidden" name="id" value="{{ b.id }}"><button class="text-rose-700 hover:underline">Quitar</button></form></li>
+{% else %}<li class="p-4 text-forest/60">No hay días bloqueados.</li>{% endfor %}
+</ul>
+<form method="post" class="bg-white border border-line rounded-lg p-4 flex flex-wrap gap-3 items-end">
+  <input type="hidden" name="action" value="add_block">
+  <label class="text-sm">Día<input type="date" name="day" required class="block mt-1 border border-line rounded-lg p-2"></label>
+  <label class="text-sm">Motivo<input name="reason" placeholder="Feriado, vacaciones…" class="block mt-1 border border-line rounded-lg p-2"></label>
+  <button class="px-5 py-2 rounded-lg bg-forest text-white font-semibold hover:bg-leaf">Bloquear día</button>
+</form>
+<script>
+document.querySelectorAll('.schedule-edit-toggle').forEach(button => {
+  button.addEventListener('click', () => {
+    const form = document.getElementById(button.getAttribute('aria-controls'));
+    const open = button.getAttribute('aria-expanded') === 'true';
+    button.setAttribute('aria-expanded', String(!open));
+    form.classList.toggle('hidden', open);
+    if (!open) form.querySelector('select[name="day"]').focus();
+  });
+});
+document.querySelectorAll('.schedule-edit-cancel').forEach(button => {
+  button.addEventListener('click', () => {
+    const form = button.closest('.schedule-edit-form');
+    form.classList.add('hidden');
+    document.querySelector(`[aria-controls="${form.id}"]`).setAttribute('aria-expanded', 'false');
+  });
+});
+</script>
+{% endblock %}

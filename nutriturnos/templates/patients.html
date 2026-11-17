@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="font-display text-3xl mb-4">Pacientes</h1>
+<form class="mb-4"><input name="q" value="{{ q }}" placeholder="Buscar por nombre o DNI" class="w-full border border-line rounded-lg p-3 bg-white"></form>
+<ul class="bg-white border border-line rounded-lg divide-y divide-line">
+{% for p in patients %}
+  <li><a href="{{ url_for('patient', id=p.id) }}" class="flex justify-between p-4 hover:bg-mist"><b>{{ p.last_name }}, {{ p.first_name }}</b><span class="text-forest/60">{{ p.phone }}</span></a></li>
+{% else %}<li class="p-6 text-center text-forest/60">Todavía no hay pacientes. Aparecen cuando alguien reserva un turno.</li>{% endfor %}
+</ul>
+{% endblock %}

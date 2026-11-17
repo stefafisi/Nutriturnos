@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% set colors = {'confirmado':'bg-leaf/15 text-leaf border-leaf','pendiente':'bg-citrus/20 text-amber-800 border-citrus','cancelado':'bg-gray-200 text-gray-600 border-gray-400','completado':'bg-sky-100 text-sky-800 border-sky-300','no_asistio':'bg-rose-100 text-rose-800 border-rose-300'} %}
+{% block content %}
+<section class="mb-6 rounded-2xl border border-line bg-white p-4 sm:p-6">
+  <div class="flex flex-wrap items-center gap-3">
+    <h1 class="font-display text-3xl flex-1">{{ dias[day.weekday()] }} {{ day.strftime('%d/%m/%Y') }}</h1>
+    <a href="{{ url_for('agenda', date=today.isoformat(), status=status_filter, payment=payment_filter) }}"
+       class="rounded-lg bg-mist px-4 py-2 font-semibold hover:bg-leaf/10">Hoy</a>
+  </div>
+  <div class="mt-4 flex flex-wrap items-end gap-2">
+    <a href="{{ url_for('agenda', date=prev.isoformat(), status=status_filter, payment=payment_filter) }}"
+       class="rounded-lg border border-line bg-white px-3 py-2" aria-label="Día anterior">‹ Anterior</a>
+    <form method="get" class="flex flex-wrap items-end gap-2">
+      <input type="hidden" name="status" value="{{ status_filter }}">
+      <input type="hidden" name="payment" value="{{ payment_filter }}">
+      <label class="text-sm font-semibold">Ir a una fecha
+        <input type="date" name="date" value="{{ day.isoformat() }}" class="mt-1 block rounded-lg border border-line bg-white p-2">
+      </label>
+      <button class="rounded-lg bg-forest px-4 py-2 font-semibold text-white hover:bg-leaf">Ver día</button>
+    </form>
+    <a href="{{ url_for('agenda', date=next.isoformat(), status=status_filter, payment=payment_filter) }}"
+       class="rounded-lg border border-line bg-white px-3 py-2" aria-label="Día siguiente">Siguiente ›</a>
+  </div>
+</section>
+
+<section class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="Resumen del día">
+  <article class="rounded-xl border border-line bg-white p-4"><p class="text-sm text-forest/60">Turnos del día</p><p class="mt-1 text-2xl font-semibold">{{ summary.total }}</p></article>
+  <article class="rounded-xl border border-line bg-white p-4"><p class="text-sm text-forest/60">Por confirmar</p><p class="mt-1 text-2xl font-semibold text-amber-800">{{ summary.pending }}</p></article>
+  <article class="rounded-xl border border-line bg-white p-4"><p class="text-sm text-forest/60">Confirmados</p><p class="mt-1 text-2xl font-semibold text-leaf">{{ summary.confirmed }}</p></article>
+  <article class="rounded-xl border border-line bg-white p-4"><p class="text-sm text-forest/60">Pagos pendientes</p><p class="mt-1 text-2xl font-semibold">{{ summary.payment_pending }}</p></article>
+</section>
+
+{% if followups %}
+<section class="mb-6 rounded-xl border border-citrus bg-white p-4 sm:p-5" aria-labelledby="followups-title">
+  <h2 id="followups-title" class="font-display text-2xl">Seguimientos pendientes</h2>
+  <p class="mt-1 text-sm text-forest/70">Pasaron 30 días o más desde el último control completado. El mensaje se envía manualmente desde WhatsApp.</p>
+  <div class="mt-4 space-y-3">
+    {% for a in followups %}
+    {% set p = a.patient %}
+    {% set msg = 'Hola ' ~ p.first_name ~ ', ¿cómo venís desde nuestro último encuentro? Si querés, coordinamos un seguimiento.' %}
+    <article class="flex flex-wrap items-center gap-3 rounded-lg border border-line p-3">
+      <div class="min-w-48 flex-1">
+        <a href="{{ url_for('patient', id=p.id) }}" class="font-semibold hover:underline">{{ p.full_name }}</a>
+        <p class="text-sm text-forest/60">Último control: {{ a.appointment_date.strftime('%d/%m/%Y') }} · {{ a.service.name if a.service else 'Consulta' }}</p>
+      </div>
+      <a target="_blank" rel="noopener" href="https://wa.me/{{ p.phone|digits }}?text={{ msg|urlencode }}"
+         class="rounded-lg bg-leaf px-4 py-2 font-semibold text-white hover:bg-forest">Escribir por WhatsApp</a>
+      <form method="post" action="{{ url_for('mark_followup_contacted', appointment_id=a.id) }}">
+        <button class="rounded-lg border border-line px-4 py-2 font-semibold hover:bg-mist">Marcar contacto realizado</button>
+      </form>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<form method="get" class="mb-5 flex flex-wrap items-end gap-3 rounded-xl border border-line bg-white p-4">
+  <input type="hidden" name="date" value="{{ day.isoformat() }}">
+  <label class="text-sm font-semibold">Estado del turno
+    <select name="status" class="mt-1 block rounded-lg border border-line bg-white p-2">
+      <option value="">Todos</option>
+      {% for state in estados %}<option value="{{ state }}" {{ 'selected' if state == status_filter }}>{{ state.replace('_', ' ')|capitalize }}</option>{% endfor %}
+    </select>
+  </label>
+  <label class="text-sm font-semibold">Estado del pago
+    <select name="payment" class="mt-1 block rounded-lg border border-line bg-white p-2">
+      <option value="">Todos</option>
+      {% for state in estados_pago %}<option value="{{ state }}" {{ 'selected' if state == payment_filter }}>{{ state.replace('_', ' ')|capitalize }}</option>{% endfor %}
+    </select>
+  </label>
+  <button class="rounded-lg bg-forest px-4 py-2 font-semibold text-white hover:bg-leaf">Filtrar</button>
+  {% if status_filter or payment_filter %}
+  <a href="{{ url_for('agenda', date=day.isoformat()) }}" class="rounded-lg border border-line px-4 py-2">Limpiar filtros</a>
+  {% endif %}
+</form>
+
+{% for a in items %}
+{% set p = a.patient %}
+{% set msg = 'Hola ' ~ p.first_name ~ ', te recuerdo tu turno el ' ~ a.appointment_date.strftime('%d/%m') ~ ' a las ' ~ a.appointment_date.strftime('%H:%M') ~ ' hs.' %}
+<article class="mb-4 overflow-hidden rounded-xl border border-line bg-white">
+  <div class="flex flex-wrap items-center gap-4 p-4 sm:p-5">
+    <div class="w-20 shrink-0 text-center">
+      <b class="font-display text-3xl">{{ a.appointment_date.strftime('%H:%M') }}</b>
+      <p class="text-xs text-forest/60">{{ a.appointment_date.strftime('%d/%m') }}</p>
+    </div>
+    <div class="min-w-48 flex-1">
+      <a href="{{ url_for('patient', id=p.id) }}" class="font-semibold hover:underline">{{ p.full_name }}</a>
+      <p class="text-sm text-forest/60">{{ a.service.name if a.service else 'Consulta' }} · {{ p.phone }}</p>
+      {% if p.email %}<p class="text-sm text-forest/60">{{ p.email }}</p>{% endif %}
+    </div>
+    <span class="rounded-full border px-3 py-1 text-sm {{ colors.get(a.status, 'bg-gray-100 text-gray-700 border-gray-300') }}">{{ a.status.replace('_', ' ')|capitalize }}</span>
+    <span class="rounded-full bg-mist px-3 py-1 text-sm">Pago: {{ a.payment_status.replace('_', ' ') }}</span>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" class="edit-toggle rounded-lg border border-line px-3 py-2 font-semibold hover:bg-mist"
+              aria-expanded="false" aria-controls="edit-{{ a.id }}">Editar</button>
+      <a target="_blank" rel="noopener" href="https://wa.me/{{ p.phone|digits }}?text={{ msg|urlencode }}"
+         class="rounded-lg bg-leaf px-4 py-2 font-semibold text-white hover:bg-forest">WhatsApp</a>
+    </div>
+  </div>
+
+  <form method="post" action="{{ url_for('update_appointment', id=a.id) }}"
+        class="flex flex-wrap items-end gap-3 border-t border-line bg-mist/60 p-4">
+    <input type="hidden" name="return_date" value="{{ day.isoformat() }}">
+    <input type="hidden" name="return_status" value="{{ status_filter }}">
+    <input type="hidden" name="return_payment" value="{{ payment_filter }}">
+    <label class="text-sm font-semibold">Estado
+      <select name="status" class="mt-1 block rounded-lg border border-line bg-white p-2 {{ colors.get(a.status, '') }}">
+        {% for state in estados %}<option value="{{ state }}" {{ 'selected' if state == a.status }}>{{ state.replace('_', ' ')|capitalize }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="text-sm font-semibold">Pago
+      <select name="payment_status" class="mt-1 block rounded-lg border border-line bg-white p-2">
+        {% for state in estados_pago %}<option value="{{ state }}" {{ 'selected' if state == a.payment_status }}>{{ state.replace('_', ' ')|capitalize }}</option>{% endfor %}
+      </select>
+    </label>
+    <button class="rounded-lg border border-line bg-white px-4 py-2 font-semibold hover:bg-mist">Guardar estado</button>
+  </form>
+
+  <form id="edit-{{ a.id }}" method="post" action="{{ url_for('edit_appointment', id=a.id) }}"
+        class="edit-form hidden space-y-4 border-t border-line p-4 sm:p-5">
+    <input type="hidden" name="return_date" value="{{ day.isoformat() }}">
+    <input type="hidden" name="return_status" value="{{ status_filter }}">
+    <input type="hidden" name="return_payment" value="{{ payment_filter }}">
+    <h2 class="font-display text-xl">Editar turno</h2>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <label class="text-sm font-semibold">Fecha
+        <input type="date" name="appointment_date" required value="{{ a.appointment_date.strftime('%Y-%m-%d') }}" class="mt-1 block w-full rounded-lg border border-line bg-white p-2">
+      </label>
+      <label class="text-sm font-semibold">Hora
+        <input type="time" name="appointment_time" required value="{{ a.appointment_date.strftime('%H:%M') }}" class="mt-1 block w-full rounded-lg border border-line bg-white p-2">
+      </label>
+      <label class="text-sm font-semibold">Tipo de consulta
+        <select name="service_id" required class="mt-1 block w-full rounded-lg border border-line bg-white p-2">
+          {% for service in services %}<option value="{{ service.id }}" {{ 'selected' if a.service_id == service.id }}>{{ service.name }}</option>{% endfor %}
+          {% if a.service and not a.service.is_active %}<option value="{{ a.service.id }}" selected>{{ a.service.name }} (inactivo)</option>{% endif %}
+        </select>
+      </label>
+      <label class="text-sm font-semibold">Nombre
+        <input name="first_name" required maxlength="100" value="{{ p.first_name }}" class="mt-1 block w-full rounded-lg border border-line bg-white p-2">
+      </label>
+      <label class="text-sm font-semibold">Apellido
+        <input name="last_name" required maxlength="100" value="{{ p.last_name }}" class="mt-1 block w-full rounded-lg border border-line bg-white p-2">
+      </label>
+      <label class="text-sm font-semibold">Teléfono
+        <input name="phone" required maxlength="50" value="{{ p.phone }}" class="mt-1 block w-full rounded-lg border border-line bg-white p-2">
+      </label>
+      <label class="text-sm font-semibold">Email
+        <input name="email" type="email" maxlength="100" value="{{ p.email or '' }}" class="mt-1 block w-full rounded-lg border border-line bg-white p-2">
+      </label>
+      <label class="text-sm font-semibold">DNI
+        <input name="dni" maxlength="20" value="{{ p.dni or '' }}" class="mt-1 block w-full rounded-lg border border-line bg-white p-2">
+      </label>
+    </div>
+    <p class="text-sm text-forest/60">El cambio de fecha y hora solo se guarda si el horario está libre.</p>
+    <div class="flex gap-2">
+      <button class="rounded-lg bg-forest px-5 py-2 font-semibold text-white hover:bg-leaf">Guardar cambios</button>
+      <button type="button" class="edit-cancel rounded-lg border border-line px-4 py-2">Cancelar</button>
+    </div>
+  </form>
+</article>
+{% else %}
+<p class="rounded-xl border border-line bg-white py-12 text-center text-forest/60">
+  {% if status_filter or payment_filter %}No hay turnos que coincidan con estos filtros.{% else %}No hay turnos para este día.{% endif %}
+</p>
+{% endfor %}
+<script>
+document.querySelectorAll('.edit-toggle').forEach(button => {
+  button.addEventListener('click', () => {
+    const form = document.getElementById(button.getAttribute('aria-controls'));
+    const open = button.getAttribute('aria-expanded') === 'true';
+    button.setAttribute('aria-expanded', String(!open));
+    form.classList.toggle('hidden', open);
+    if (!open) form.querySelector('input[name="appointment_date"]').focus();
+  });
+});
+document.querySelectorAll('.edit-cancel').forEach(button => {
+  button.addEventListener('click', () => {
+    const form = button.closest('.edit-form');
+    form.classList.add('hidden');
+    document.querySelector(`[aria-controls="${form.id}"]`).setAttribute('aria-expanded', 'false');
+  });
+});
+</script>
+{% endblock %}

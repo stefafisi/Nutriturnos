@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}{{ settings.site_title }}{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto">
+  <div class="flex items-start gap-4">
+    {% if branding %}
+    <img src="{{ url_for('static', filename=branding.logo) }}" alt="Logo de Franco Paporello"
+         class="h-20 w-24 shrink-0 rounded-lg object-contain">
+    {% endif %}
+    <div class="flex-1">
+      <h1 class="font-display text-4xl leading-tight">{{ settings.site_title }}</h1>
+      <p class="mt-2 text-forest/70">{{ settings.site_description }}</p>
+      {% if branding %}
+      <p class="mt-3 font-semibold">Atención presencial: {{ branding.address }}</p>
+      {% endif %}
+    </div>
+    <button id="install-app" type="button" class="hidden rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold">Instalar</button>
+  </div>
+  {% if branding %}
+  <section class="mt-4 rounded-xl border border-citrus bg-white p-4 text-sm">
+    <h2 class="font-display text-xl">Reserva y confirmación de turnos</h2>
+    <p class="mt-2">Para confirmar tu turno, aboná una seña de ${{ '{:,.0f}'.format(settings.deposit_amount).replace(',', '.') }} por transferencia dentro de las 24 horas posteriores a la reserva.</p>
+    <p class="mt-2">Una vez realizada la transferencia, enviame el comprobante por WhatsApp al
+      <a class="font-semibold text-leaf underline" href="https://wa.me/{{ branding.whatsapp_number }}">{{ branding.whatsapp_display }}</a>.
+    </p>
+    <p class="mt-2 font-semibold">Datos para realizar la transferencia:</p>
+    <ul class="ml-5 mt-1 list-disc">
+      <li>Alias: <b>{{ settings.payment_alias }}</b></li>
+      <li>{{ settings.payment_instructions }}</li>
+    </ul>
+    <p class="mt-2"><b>Importante:</b> Si el pago no se acredita dentro de ese plazo, el turno se cancelará automáticamente.</p>
+
+    <h2 class="mt-4 font-display text-xl">Políticas de reprogramación y cancelación</h2>
+    <p class="mt-2">La organización de la agenda es fundamental para poder brindarte un buen servicio. Por eso, te pido que tengas en cuenta las siguientes pautas:</p>
+    <ul class="ml-5 mt-2 list-disc space-y-1">
+      <li><b>Aviso con 24 horas de anticipación:</b> Si necesitás cancelar o modificar tu turno, deberás avisar con al menos 24 horas de anticipación.</li>
+      <li><b>Reprogramación o cancelación:</b> Si avisás dentro de ese plazo, podrás reprogramar tu turno o cancelarlo sin ningún cargo adicional (la seña podrá ser devuelta).</li>
+      <li><b>Menos de 24 horas de anticipación:</b> No se realizará devolución de la seña. Con tan poco tiempo de margen, resulta imposible reasignar ese espacio para otro paciente. Si querés otro turno, se deberá seguir el procedimiento aclarado desde un principio.</li>
+    </ul>
+    <p class="mt-3">¡Muchas gracias por comprender! Nos vemos en la consulta.<br><b>Lic. Franco Paporello</b></p>
+  </section>
+  {% elif settings.deposit_amount %}
+  <p class="mt-4 rounded-lg border border-citrus bg-white p-3 text-sm">
+    Para confirmar tu turno, aboná una seña de ${{ '{:,.0f}'.format(settings.deposit_amount).replace(',', '.') }} por transferencia dentro de las 24 horas posteriores a la reserva.
+    Alias: <b>{{ settings.payment_alias }}</b>.
+    {{ settings.payment_instructions }}
+    Si el pago no se acredita dentro de ese plazo, el turno se cancelará automáticamente.
+  </p>
+  {% endif %}
+
+  <section id="step1" class="mt-8 space-y-6">
+    <fieldset>
+      <legend class="font-semibold mb-2">Tipo de consulta</legend>
+      <div class="space-y-2">
+      {% for s in services %}
+        <label class="service-option flex items-center gap-3 bg-white border border-line rounded-lg p-3 cursor-pointer has-[:checked]:border-leaf has-[:checked]:bg-leaf/10">
+          <input type="radio" name="service" value="{{ s.id }}" {{ 'checked' if loop.first }} class="brand-accent-control accent-[#4F8A5B]">
+          <span class="flex-1"><b>{{ s.name }}</b><br><small class="text-forest/60">{{ s.description }}{% if s.description %}<br>{% endif %}{{ s.duration_minutes }} min{{ ' · online' if s.is_online }}</small></span>
+          <span class="font-semibold">${{ '{:,.0f}'.format(s.price).replace(',', '.') }}</span>
+        </label>
+      {% endfor %}
+      </div>
+    </fieldset>
+    <div>
+      <label for="date" class="font-semibold block mb-2">Día</label>
+      <input id="date" type="date" min="{{ today }}" class="w-full border border-line rounded-lg p-3 bg-white">
+    </div>
+    <div>
+      <p class="font-semibold mb-2">Horario</p>
+      <div id="slots" class="grid grid-cols-3 sm:grid-cols-4 gap-2"><p class="col-span-full text-forest/60">Elegí un día para ver los horarios libres.</p></div>
+    </div>
+  </section>
+
+  <form id="step2" class="mt-8 space-y-4 hidden">
+    <p id="resumen" class="bg-white border border-line rounded-lg p-3"></p>
+    <label class="hidden" aria-hidden="true">Dejar vacío<input name="website" tabindex="-1" autocomplete="off"></label>
+    <div class="grid grid-cols-2 gap-4">
+      <label class="block">Nombre<input name="first_name" required class="mt-1 w-full border border-line rounded-lg p-3 bg-white"></label>
+      <label class="block">Apellido<input name="last_name" required class="mt-1 w-full border border-line rounded-lg p-3 bg-white"></label>
+    </div>
+    <label class="block">WhatsApp
+      <input name="phone" type="tel" required placeholder="+54 9 11 1234 5678" autocomplete="tel" class="mt-1 w-full border border-line rounded-lg p-3 bg-white">
+      <small class="text-forest/60">Ingresá el número con código de país.</small>
+    </label>
+    <label class="block">DNI (opcional)<input name="dni" class="mt-1 w-full border border-line rounded-lg p-3 bg-white"></label>
+    <label class="flex items-start gap-2 text-sm text-forest/70">
+      <input name="whatsapp_opt_in" type="checkbox" class="mt-1 brand-accent-control accent-[#4F8A5B]">
+      <span>Acepto que el profesional me contacte por WhatsApp con recordatorios del turno y un seguimiento aproximadamente un mes después. El seguimiento mensual se realiza manualmente. El número debe incluir el código de país.</span>
+    </label>
+    <p id="error" class="text-red-700" role="alert"></p>
+    <div class="flex gap-3">
+      <button type="button" id="back" class="px-5 py-3 rounded-lg border border-line bg-white">Cambiar horario</button>
+      <button type="submit" class="flex-1 px-5 py-3 rounded-lg bg-forest text-white font-semibold hover:bg-leaf">Confirmar turno</button>
+    </div>
+  </form>
+
+  <section id="step3" class="mt-8 hidden bg-white border border-line rounded-lg p-6">
+    <h2 class="font-display text-2xl">¡Turno reservado!</h2>
+    <p id="ok" class="mt-2"></p>
+  </section>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+const apiBase = {{ url_for('available_slots', slug=slug)|tojson }}.replace('/api/available-slots', '');
+let chosen = null;
+const service = () => document.querySelector('input[name=service]:checked').value;
+async function loadSlots() {
+  const d = $('#date').value; if (!d) return;
+  const response = await fetch(`${apiBase}/api/available-slots?date=${d}&service_id=${service()}`);
+  const r = await response.json();
+  $('#slots').innerHTML = r.length ? r.map(t => `<button type="button" data-t="${t}" class="border border-line bg-white rounded-lg py-2 hover:border-leaf hover:bg-leaf/10">${t}</button>`).join('')
+    : '<p class="col-span-full text-forest/60">No hay horarios libres ese día. Probá con otra fecha.</p>';
+}
+$('#date').addEventListener('change', loadSlots);
+document.querySelectorAll('input[name=service]').forEach(i => i.addEventListener('change', loadSlots));
+$('#slots').addEventListener('click', e => {
+  const t = e.target.dataset.t; if (!t) return;
+  chosen = t;
+  const name = document.querySelector('input[name=service]:checked').closest('label').querySelector('b').textContent;
+  $('#resumen').textContent = `${name} · ${$('#date').value.split('-').reverse().join('/')} a las ${t} hs`;
+  $('#step1').classList.add('hidden'); $('#step2').classList.remove('hidden');
+});
+$('#back').onclick = () => { $('#step2').classList.add('hidden'); $('#step1').classList.remove('hidden'); loadSlots(); };
+$('#step2').addEventListener('submit', async e => {
+  e.preventDefault();
+  const submitButton = e.target.querySelector('button[type="submit"]');
+  const originalButtonText = submitButton.textContent;
+  submitButton.disabled = true;
+  submitButton.textContent = 'Confirmando...';
+  $('#error').textContent = '';
+  const formData = new FormData(e.target);
+  const body = Object.fromEntries(formData);
+  body.whatsapp_opt_in = formData.has('whatsapp_opt_in');
+  Object.assign(body, { date: $('#date').value, time: chosen, service_id: service() });
+  try {
+    const r = await fetch(`${apiBase}/api/book`, { method: 'POST', headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+    }, body: JSON.stringify(body) });
+    const j = await r.json();
+    if (!r.ok) { $('#error').textContent = j.error; return; }
+    $('#ok').textContent = `${$('#resumen').textContent}. ¡Turno reservado!`;
+    const managementLink = document.createElement('a');
+    managementLink.href = j.manage_url;
+    managementLink.textContent = 'Administrar, cancelar o reprogramar este turno';
+    managementLink.className = 'mt-3 block font-semibold text-leaf underline';
+    $('#ok').append(document.createElement('br'), managementLink);
+    $('#step2').classList.add('hidden'); $('#step3').classList.remove('hidden');
+  } catch (error) {
+    console.error('Error al confirmar el turno', error);
+    $('#error').textContent = 'No pudimos completar la reserva. Revisá tu conexión e intentá nuevamente.';
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = originalButtonText;
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Crear cuenta profesional · Turnos de nutrición{% endblock %}
+{% block content %}
+<section class="mx-auto mt-6 max-w-md sm:mt-12">
+  <div class="mb-6 text-center">
+    <p class="text-sm font-semibold uppercase tracking-widest text-leaf">Nueva cuenta</p>
+    <h1 class="mt-2 font-display text-4xl">Crear cuenta profesional</h1>
+    <p class="mt-3 text-forest/70">Tu agenda, tus pacientes y tu configuración serán independientes de las de otros profesionales.</p>
+  </div>
+  <form method="post" class="space-y-5 rounded-2xl border border-line bg-white p-6 shadow-sm sm:p-8">
+    <label class="block font-semibold">Nombre del profesional
+      <input name="display_name" maxlength="120" required autocomplete="name" class="mt-2 w-full rounded-lg border border-line p-3">
+    </label>
+    <label class="block font-semibold">Email
+      <input name="email" type="email" maxlength="254" required autocomplete="email" class="mt-2 w-full rounded-lg border border-line p-3">
+    </label>
+    <label class="block font-semibold">Contraseña
+      <input name="password" type="password" minlength="8" maxlength="128" required autocomplete="new-password" class="mt-2 w-full rounded-lg border border-line p-3">
+      <small class="mt-1 block font-normal text-forest/60">Usá entre 8 y 128 caracteres.</small>
+    </label>
+    <label class="block font-semibold">Repetí la contraseña
+      <input name="password_confirmation" type="password" minlength="8" maxlength="128" required autocomplete="new-password" class="mt-2 w-full rounded-lg border border-line p-3">
+    </label>
+    <button class="w-full rounded-lg bg-forest py-3 font-semibold text-white transition hover:bg-leaf">Crear cuenta</button>
+  </form>
+  <p class="mt-5 text-center text-sm text-forest/70">¿Ya tenés cuenta? <a href="{{ url_for('login') }}" class="font-semibold text-leaf underline">Ingresá</a>.</p>
+</section>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Profesionales · Turnos de nutrición{% endblock %}
+{% block content %}
+<section class="mx-auto max-w-2xl">
+  <h1 class="font-display text-4xl">Encontrá a tu profesional</h1>
+  <p class="mt-3 text-forest/70">Elegí un profesional para ver sus consultas y horarios disponibles.</p>
+  <ul class="mt-6 space-y-3">
+  {% for professional in professionals %}
+    {% set branding = professional_branding.get(professional.slug) %}
+    <li class="professional-card rounded-xl border border-line bg-white p-5 {{ 'professional-card-branded' if branding }}"
+        {% if branding %}style="--profile-primary: {{ branding.primary }}; --profile-background: {{ branding.background }}; --profile-text: {{ branding.text }}"{% endif %}>
+      <div class="flex items-center gap-4">
+        {% if branding %}
+        <img src="{{ url_for('static', filename=branding.logo) }}" alt="Logo de {{ professional.display_name }}"
+             class="h-16 w-20 shrink-0 rounded-lg object-contain">
+        {% endif %}
+        <h2 class="professional-card-title font-display text-2xl">{{ professional.display_name }}</h2>
+      </div>
+      <a href="{{ url_for('public_booking', slug=professional.slug) }}"
+         class="professional-card-link mt-3 inline-block rounded-lg px-5 py-3 font-semibold text-white {{ 'bg-forest hover:bg-leaf' if not branding }}">Ver horarios y reservar</a>
+    </li>
+  {% else %}
+    <li class="rounded-xl border border-line bg-white p-6 text-center text-forest/70">Todavía no hay profesionales registrados.</li>
+  {% endfor %}
+  </ul>
+</section>
+{% endblock %}
