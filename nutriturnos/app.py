@@ -1449,7 +1449,7 @@ def seed(account_id):
                 name="Consulta + Antropometría",
                 description=(
                     "Consulta nutricional y evaluación de composición corporal para conocer "
-                    "masa muscular, masa grasa y acompañar tu evolución. Atención presencial o virtual."
+                    "masa muscular, masa grasa y acompañar tu evolución. Atención presencial."
                 ),
                 duration_minutes=60,
                 price=40000,
@@ -1459,7 +1459,7 @@ def seed(account_id):
                 name="Antropometría",
                 description=(
                     "Mediciones de composición corporal para registrar masa muscular, masa grasa "
-                    "y otros indicadores, y hacer seguimiento. Atención presencial o virtual."
+                    "y otros indicadores, y hacer seguimiento. Atención presencial."
                 ),
                 duration_minutes=30,
                 price=20000,
@@ -1469,7 +1469,7 @@ def seed(account_id):
                 name="Consulta + Plan + Antropometría",
                 description=(
                     "Evaluación y educación nutricional, plan personalizado y evaluación de "
-                    "composición corporal para acompañar tu evolución. Atención presencial o virtual."
+                    "composición corporal para acompañar tu evolución. Atención presencial."
                 ),
                 duration_minutes=75,
                 price=60000,

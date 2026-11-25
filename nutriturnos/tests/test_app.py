@@ -132,7 +132,10 @@ class BookingTests(unittest.TestCase):
                 ],
             )
             self.assertLess(max(len(service.description) for service in services), 200)
-            self.assertTrue(all("Atención presencial o virtual." in service.description for service in services))
+            virtual = {"Consulta nutricional", "Consulta + Plan de alimentación"}
+            for service in services:
+                expected = "Atención presencial o virtual." if service.name in virtual else "Atención presencial."
+                self.assertTrue(service.description.endswith(expected), service.name)
             settings = ClinicSettings.query.filter_by(account_id=account.id).one()
             self.assertIn("acompañamiento continuo por WhatsApp", settings.site_description)
         with self.client.session_transaction() as browser_session:
