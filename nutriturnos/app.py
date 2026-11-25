@@ -1429,7 +1429,7 @@ def seed(account_id):
                 description=(
                     "Evaluación de tus hábitos, historia clínica y objetivos, con educación "
                     "nutricional y herramientas prácticas para mejorar tu alimentación. "
-                    "Atención presencial."
+                    "Atención presencial o virtual."
                 ),
                 duration_minutes=60,
                 price=30000,
@@ -1439,7 +1439,7 @@ def seed(account_id):
                 name="Consulta + Plan de alimentación",
                 description=(
                     "Evaluación nutricional y plan personalizado según tus necesidades, "
-                    "objetivos, preferencias y estilo de vida. Atención presencial."
+                    "objetivos, preferencias y estilo de vida. Atención presencial o virtual."
                 ),
                 duration_minutes=60,
                 price=52000,
@@ -1449,7 +1449,7 @@ def seed(account_id):
                 name="Consulta + Antropometría",
                 description=(
                     "Consulta nutricional y evaluación de composición corporal para conocer "
-                    "masa muscular, masa grasa y acompañar tu evolución. Atención presencial."
+                    "masa muscular, masa grasa y acompañar tu evolución. Atención presencial o virtual."
                 ),
                 duration_minutes=60,
                 price=40000,
@@ -1459,7 +1459,7 @@ def seed(account_id):
                 name="Antropometría",
                 description=(
                     "Mediciones de composición corporal para registrar masa muscular, masa grasa "
-                    "y otros indicadores, y hacer seguimiento. Atención presencial."
+                    "y otros indicadores, y hacer seguimiento. Atención presencial o virtual."
                 ),
                 duration_minutes=30,
                 price=20000,
@@ -1469,7 +1469,7 @@ def seed(account_id):
                 name="Consulta + Plan + Antropometría",
                 description=(
                     "Evaluación y educación nutricional, plan personalizado y evaluación de "
-                    "composición corporal para acompañar tu evolución. Atención presencial."
+                    "composición corporal para acompañar tu evolución. Atención presencial o virtual."
                 ),
                 duration_minutes=75,
                 price=60000,
