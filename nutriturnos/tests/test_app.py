@@ -152,6 +152,12 @@ class BookingTests(unittest.TestCase):
         self.assertIn(b"Crear cuenta", response.data)
         self.assertEqual(self.client.get("/admin/signup").status_code, 200)
 
+    def test_privacy_page_is_public_and_linked(self):
+        response = self.client.get("/privacidad")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Google Calendar".encode(), response.data)
+        self.assertIn(b'href="/privacidad"', self.client.get("/").data)
+
     def test_email_login_and_signup_validation(self):
         bad_signup = self.client.post("/admin/signup", data={
             "display_name": "New Professional",

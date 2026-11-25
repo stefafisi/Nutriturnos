@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Política de privacidad · Turnos de nutrición{% endblock %}
+{% block content %}
+<article class="mx-auto max-w-2xl space-y-5 leading-relaxed">
+  <h1 class="font-display text-4xl">Política de privacidad</h1>
+  <p class="text-forest/70">Última actualización: 25 de noviembre de 2026</p>
+
+  <p>Nutriturnos es un sistema de reserva de turnos para profesionales de la nutrición. Esta página explica qué datos se usan, para qué y cómo se protegen.</p>
+
+  <h2 class="font-display text-2xl">Datos de pacientes</h2>
+  <p>Al reservar un turno se piden nombre, apellido, teléfono y email, y opcionalmente DNI, fecha de nacimiento y otros datos que el profesional necesite para la consulta. Se usan únicamente para gestionar el turno, comunicarse con el paciente (recordatorios, confirmaciones y seña) y llevar la historia de la atención. Cada profesional solo ve los datos de sus propios pacientes.</p>
+
+  <h2 class="font-display text-2xl">Datos de profesionales</h2>
+  <p>Para crear una cuenta profesional se piden nombre, email y contraseña. La contraseña se guarda cifrada y no puede leerse.</p>
+
+  <h2 class="font-display text-2xl">Google Calendar</h2>
+  <p>Si un profesional decide conectar su Google Calendar, Nutriturnos pide permiso para ver su email y para crear, modificar y borrar eventos en su calendario. Ese permiso se usa solo para agregar los turnos reservados, actualizarlos si se reprograman y borrarlos si se cancelan. Nutriturnos no lee ni modifica otros eventos del calendario, y no comparte esta información con terceros.</p>
+  <p>El permiso de Google se guarda cifrado. El profesional puede revocarlo cuando quiera desde <a class="underline" href="https://myaccount.google.com/permissions" rel="noopener">la configuración de su cuenta de Google</a>.</p>
+  <p>El uso de la información recibida de las APIs de Google cumple con la <a class="underline" href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener">Política de Datos del Usuario de los Servicios de las APIs de Google</a>, incluidos los requisitos de uso limitado.</p>
+
+  <h2 class="font-display text-2xl">Conservación y eliminación</h2>
+  <p>Los datos se conservan mientras sean necesarios para la atención. Para consultar, corregir o eliminar tus datos, contactá al profesional con el que reservaste por los medios indicados en su página de reservas.</p>
+
+  <h2 class="font-display text-2xl">Terceros</h2>
+  <p>Nutriturnos no vende ni cede datos personales. Solo se usan los servicios necesarios para funcionar: el alojamiento del sitio, el envío de emails y, si el profesional lo conecta, Google Calendar.</p>
+</article>
+{% endblock %}

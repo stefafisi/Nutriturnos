@@ -865,6 +865,11 @@ def index():
     )
 
 
+@app.route("/privacidad")
+def privacy():
+    return render_template("privacy.html")
+
+
 @app.route("/p/<slug>")
 def public_booking(slug):
     services = Service.query.filter_by(is_active=True).order_by(Service.name).all()

@@ -79,6 +79,9 @@ body.professional-branded .service-option:has(input:checked) {
 <p class="mb-4 rounded bg-white border border-line px-4 py-2" role="status">{{ m }}</p>{% endfor %}{% endwith %}
 {% block content %}{% endblock %}
 </main>
+<footer class="max-w-5xl mx-auto px-4 pb-8 text-center text-sm text-forest/60">
+  <a class="underline" href="{{ url_for('privacy') }}">Política de privacidad</a>
+</footer>
 <script>
 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 document.querySelectorAll('form[method="post" i]').forEach(form => {
